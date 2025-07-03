@@ -10,8 +10,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // 检查用量限制
     if (session.subscription_status === "free") {
-      return NextResponse.json({ error: "Premium subscription required" }, { status: 403 })
+      // 查询本月使用次数
+      const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM 格式
+      const usageCount = await sql`
+        SELECT COUNT(*) as count 
+        FROM usage_logs 
+        WHERE user_id = ${session.id} 
+        AND action = 'background_removal' 
+        AND created_at >= ${currentMonth + '-01'}
+      `
+      
+      const monthlyUsage = Number(usageCount[0]?.count || 0)
+      
+      if (monthlyUsage >= 3) {
+        return NextResponse.json({ 
+          error: "Free plan limit reached (3 images/month). Please upgrade to Premium for more." 
+        }, { status: 403 })
+      }
     }
 
     // Check if Replicate API token is configured
@@ -70,7 +87,7 @@ export async function POST(request: NextRequest) {
     console.log("Background removal completed, output:", output)
 
     // Fetch the processed image from Replicate
-    const response = await fetch(output as string)
+    const response = await fetch(output as unknown as string)
     
     if (!response.ok) {
       throw new Error(`Failed to fetch processed image: ${response.statusText}`)
