@@ -73,7 +73,25 @@ export function UploadImage({ user }: UploadImageProps) {
         setProcessedImage(processedUrl)
       } catch (error) {
         console.error("Error processing image:", error)
-        setError(error instanceof Error ? error.message : "Failed to process image. Please try again.")
+        
+        // More specific error handling
+        let errorMessage = "Failed to process image. Please try again."
+        
+        if (error instanceof Error) {
+          if (error.message.includes("AI service not configured")) {
+            errorMessage = "AI service is not configured. Please contact support."
+          } else if (error.message.includes("authentication failed")) {
+            errorMessage = "AI service authentication failed. Please contact support."
+          } else if (error.message.includes("temporarily unavailable")) {
+            errorMessage = "Service is temporarily busy. Please try again in a few moments."
+          } else if (error.message.includes("rate limit")) {
+            errorMessage = "Too many requests. Please wait and try again."
+          } else {
+            errorMessage = error.message
+          }
+        }
+        
+        setError(errorMessage)
       } finally {
         setIsProcessing(false)
       }
@@ -114,6 +132,9 @@ export function UploadImage({ user }: UploadImageProps) {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-4">{t.tool.title}</h1>
+        <p className="text-muted-foreground mb-4">
+          Upload an image and our AI will automatically remove the background for you.
+        </p>
       </div>
 
       {error && (
@@ -160,6 +181,9 @@ export function UploadImage({ user }: UploadImageProps) {
                   <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                     <p>{t.tool.processing}</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      This may take 10-30 seconds...
+                    </p>
                   </div>
                 </div>
               ) : processedImage ? (
