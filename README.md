@@ -12,7 +12,7 @@ Any changes you make to your deployed app will be automatically pushed to this r
 
 ## Deployment
 
-Your project is live at:
+Your project is live at: 
 
 **[https://vercel.com/lius-projects-1953349c/v0-next-js-project-requirements](https://vercel.com/lius-projects-1953349c/v0-next-js-project-requirements)**
 
